@@ -7,7 +7,7 @@ const dotenv = require('dotenv');
 const path = require('path');
 
 // Load environment variables dynamically based on file location
-dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, '.env') });
 
 const connectDB = require('./src/config/db');
 const { initializeFirebase } = require('./src/config/firebase');
