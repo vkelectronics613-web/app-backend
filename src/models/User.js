@@ -36,6 +36,10 @@ const userSchema = new mongoose.Schema(
                 type: Date,
                 default: null,
             },
+            count: {
+                type: Number,
+                default: 0,
+            },
         },
         payoutCount: {
             type: Number,
