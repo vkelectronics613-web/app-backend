@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "930154510643",
+    "project_id": "gen-lang-client-0623567958",
+    "storage_bucket": "gen-lang-client-0623567958.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:930154510643:android:3ab2a07234ddc731d16646",
+        "android_client_info": {
+          "package_name": "com.rupeerush.app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "930154510643-0vh2nv5soh3mdi6llc4of73vnc465dj9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCUkdgGT4UAsT3ohN4Kcc8JSGGYDXJAmGs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "930154510643-0vh2nv5soh3mdi6llc4of73vnc465dj9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
