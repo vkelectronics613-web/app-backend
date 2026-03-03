@@ -31,6 +31,12 @@ const userSchema = new mongoose.Schema(
                 default: null,
             },
         },
+        spin: {
+            lastSpinDate: {
+                type: Date,
+                default: null,
+            },
+        },
         payoutCount: {
             type: Number,
             default: 0,
