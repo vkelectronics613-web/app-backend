@@ -12,6 +12,9 @@ const createTx = async (userId, type, amount, source, description) => {
     });
 };
 
+// Rate Limiter Memory Map to prevent double-click React Native bridge duplication bugs
+const minesweeperLocks = new Map();
+
 // 1. Daily Streak
 exports.claimDailyStreak = async (req, res) => {
     try {
@@ -195,6 +198,14 @@ exports.submitMinesweeperResult = async (req, res) => {
         if (!action || amount === undefined || amount < 0) {
             return res.status(400).json({ success: false, message: 'Invalid payload' });
         }
+
+        // --- Prevent Double Click / Race Condition Bug ---
+        const lastReqTime = minesweeperLocks.get(userId);
+        if (lastReqTime && (Date.now() - lastReqTime < 2000)) {
+            return res.status(429).json({ success: false, message: 'Processing... please wait.' });
+        }
+        minesweeperLocks.set(userId, Date.now());
+        // -------------------------------------------------
 
         const user = await User.findById(userId);
 
