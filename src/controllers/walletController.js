@@ -59,7 +59,7 @@ const requestPayout = async (req, res) => {
             type: 'PAYOUT',
             source: 'PAYOUT_REQUEST',
             amount: amount,
-            description: `Requested payout of ${amount} coins via ${paymentMethod}`,
+            description: `Requested ${amount} coins via ${paymentMethod} to [${paymentDetails}]`,
             status: 'PENDING'
         });
 
