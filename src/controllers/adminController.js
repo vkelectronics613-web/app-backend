@@ -47,7 +47,7 @@ const updateUserBalance = async (req, res) => {
         await Transaction.create({
             user: userToUpdate._id,
             type: parsedAmount >= 0 ? 'EARN' : 'SPEND',
-            source: 'ADMIN_ADJUSTMENT',
+            source: 'ADMIN',
             amount: Math.abs(parsedAmount), // Store positive magnitude
             description: reason || `Admin adjusted balance by ${parsedAmount} coins`,
         });
@@ -64,21 +64,70 @@ const updateUserBalance = async (req, res) => {
 // @access  Private/Admin
 const getAllTransactions = async (req, res) => {
     try {
-        // Populate the username & email from User coll to display who did what
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 20;
+        const skip = (page - 1) * limit;
+
+        const total = await Transaction.countDocuments({});
         const txs = await Transaction.find({})
             .populate('user', 'displayName email referralCode')
             .sort({ createdAt: -1 })
-            .limit(1000); // hard cap to prevent catastrophic DB load
+            .skip(skip)
+            .limit(limit);
 
-        res.status(200).json({ success: true, count: txs.length, data: txs });
+        res.status(200).json({
+            success: true,
+            count: txs.length,
+            totalPages: Math.ceil(total / limit) || 1,
+            currentPage: page,
+            data: txs
+        });
     } catch (error) {
         console.error('Admin getAllTransactions Error:', error);
         res.status(500).json({ success: false, message: 'Server Error Fetching Transactions' });
     }
 };
 
+// @desc    Get all payout requests
+// @route   GET /api/v1/admin/payouts
+// @access  Private/Admin
+const getPayouts = async (req, res) => {
+    try {
+        const payouts = await Transaction.find({ source: 'PAYOUT_REQUEST' })
+            .populate('user', 'displayName email')
+            .sort({ createdAt: -1 });
+        res.status(200).json({ success: true, data: payouts });
+    } catch (error) {
+        console.error('Admin getPayouts Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error Fetching Payouts' });
+    }
+};
+
+// @desc    Update a payout request status
+// @route   POST /api/v1/admin/payouts/:id/status
+// @access  Private/Admin
+const updatePayoutStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        const tx = await Transaction.findById(id);
+        if (!tx) return res.status(404).json({ success: false, message: 'Transaction not found' });
+
+        tx.status = status;
+        await tx.save();
+
+        res.status(200).json({ success: true, data: tx });
+    } catch (error) {
+        console.error('Admin updatePayoutStatus Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error Updating Payout' });
+    }
+};
+
 module.exports = {
     getAllUsers,
     updateUserBalance,
-    getAllTransactions
+    getAllTransactions,
+    getPayouts,
+    updatePayoutStatus
 };

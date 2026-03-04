@@ -1,5 +1,5 @@
 const express = require('express');
-const { getAllUsers, updateUserBalance, getAllTransactions } = require('../controllers/adminController');
+const { getAllUsers, updateUserBalance, getAllTransactions, getPayouts, updatePayoutStatus } = require('../controllers/adminController');
 const { isAdminUser } = require('../middleware/adminMiddleware');
 
 const router = express.Router();
@@ -10,5 +10,7 @@ router.use(isAdminUser);
 router.get('/users', getAllUsers);
 router.post('/users/:id/balance', updateUserBalance);
 router.get('/transactions', getAllTransactions);
+router.get('/payouts', getPayouts);
+router.post('/payouts/:id/status', updatePayoutStatus);
 
 module.exports = router;
