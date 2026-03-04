@@ -1,5 +1,5 @@
 const express = require('express');
-const { claimDailyStreak, executeLuckySpin, submitLudoResult, executeWatchAd, submitTurboRacerResult, submitMinesweeperResult } = require('../controllers/rewardsController');
+const { claimDailyStreak, executeLuckySpin, submitLudoResult, executeWatchAd, submitTurboRacerResult, submitMinesweeperResult, executeScratchEarn } = require('../controllers/rewardsController');
 const { verifyFirebaseToken } = require('../middleware/authMiddleware');
 const { detectFraud } = require('../middleware/fraudMiddleware');
 
@@ -25,5 +25,8 @@ router.post('/turbo-racer', submitTurboRacerResult);
 
 // Submit Minesweeper Result
 router.post('/minesweeper', submitMinesweeperResult);
+
+// Submit Scratch & Earn Result
+router.post('/scratch', executeScratchEarn);
 
 module.exports = router;
