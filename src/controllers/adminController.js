@@ -124,10 +124,99 @@ const updatePayoutStatus = async (req, res) => {
     }
 };
 
+// @desc    Ban all users by Device ID
+// @route   POST /api/v1/admin/users/ban-device
+// @access  Private/Admin
+const banDevice = async (req, res) => {
+    try {
+        const { deviceId } = req.body;
+        if (!deviceId) return res.status(400).json({ success: false, message: 'Device ID required' });
+
+        const result = await User.updateMany({ deviceId }, { $set: { isBanned: true } });
+        res.status(200).json({ success: true, message: `Banned ${result.modifiedCount} accounts linked to device.` });
+    } catch (error) {
+        console.error('Admin banDevice Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error Banning Device' });
+    }
+};
+
+// @desc    Get Global App Configuration
+// @route   GET /api/v1/admin/config
+// @access  Private/Admin
+const getGlobalConfig = async (req, res) => {
+    try {
+        let config = await require('../models/GlobalConfig').findOne({ type: 'GLOBAL' });
+        if (!config) {
+            config = await require('../models/GlobalConfig').create({ type: 'GLOBAL' });
+        }
+        res.status(200).json({ success: true, data: config });
+    } catch (error) {
+        console.error('Admin getGlobalConfig Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error Fetching Config' });
+    }
+};
+
+// @desc    Update Global App Configuration
+// @route   PUT /api/v1/admin/config
+// @access  Private/Admin
+const updateGlobalConfig = async (req, res) => {
+    try {
+        const updates = req.body;
+        let config = await require('../models/GlobalConfig').findOne({ type: 'GLOBAL' });
+
+        if (!config) {
+            config = await require('../models/GlobalConfig').create({ type: 'GLOBAL', ...updates });
+        } else {
+            Object.assign(config, updates);
+            config.updatedAt = Date.now();
+            await config.save();
+        }
+
+        res.status(200).json({ success: true, data: config });
+    } catch (error) {
+        console.error('Admin updateGlobalConfig Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error Updating Config' });
+    }
+};
+
+// @desc    Get Analytics Dashboard Data
+// @route   GET /api/v1/admin/analytics
+// @access  Private/Admin
+const getAnalyticsDashboard = async (req, res) => {
+    try {
+        // Find today's analytics
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+
+        let todayAnalytics = await require('../models/Analytics').findOne({ date: { $gte: startOfDay } });
+
+        // Sum total user coin liabilities globally
+        const liabilityAggr = await User.aggregate([
+            { $group: { _id: null, totalCoins: { $sum: "$coinBalance" } } }
+        ]);
+        const totalCoinLiability = liabilityAggr.length > 0 ? liabilityAggr[0].totalCoins : 0;
+
+        res.status(200).json({
+            success: true,
+            data: {
+                today: todayAnalytics || null,
+                totalCoinLiability
+            }
+        });
+    } catch (error) {
+        console.error('Admin getAnalytics Error:', error);
+        res.status(500).json({ success: false, message: 'Server Error Fetching Analytics' });
+    }
+};
+
 module.exports = {
     getAllUsers,
     updateUserBalance,
     getAllTransactions,
     getPayouts,
-    updatePayoutStatus
+    updatePayoutStatus,
+    banDevice,
+    getGlobalConfig,
+    updateGlobalConfig,
+    getAnalyticsDashboard
 };

@@ -51,12 +51,27 @@ const userSchema = new mongoose.Schema(
         },
         deviceId: {
             type: String,
-            unique: true,
-            sparse: true, // Allow multiple nulls if device tracking not immediately available
+            default: null, // Allow multiple nulls if device tracking not immediately available
         },
         isBanned: {
             type: Boolean,
-            default: false,
+            default: false, // Prevents all login/API access if true
+        },
+        vpnFlagged: {
+            type: Boolean,
+            default: false, // Flags suspicious routing behaviors
+        },
+        adViewsToday: {
+            type: Number,
+            default: 0, // Enforces maximum daily ad load constraints
+        },
+        lastAdReset: {
+            type: Date,
+            default: null, // Tracks when the 24h constraint rolling-window resets
+        },
+        notificationsClearedAt: {
+            type: Date,
+            default: null, // Tracks when global notifications were dismissed
         },
         displayName: {
             type: String,

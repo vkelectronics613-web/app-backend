@@ -49,12 +49,18 @@ const getMyNotifications = async (req, res) => {
         const userId = req.user._id;
 
         // Fetch notifications specific to the user OR global broadcasts (user: null)
-        const notifications = await Notification.find({
+        const query = {
             $or: [
                 { user: userId },
                 { user: null }
             ]
-        }).sort({ createdAt: -1 }).limit(50); // limit to 50 most recent
+        };
+
+        if (req.user.notificationsClearedAt) {
+            query.createdAt = { $gt: req.user.notificationsClearedAt };
+        }
+
+        const notifications = await Notification.find(query).sort({ createdAt: -1 }).limit(50);
 
         res.status(200).json({
             success: true,
@@ -75,14 +81,20 @@ const clearMyNotifications = async (req, res) => {
     try {
         const userId = req.user._id;
 
-        // Delete notifications hardcoded exactly to this user
-        // Note: This does not delete global broadcasts from the DB, just direct ones.
-        // To "clear" globals per-user, we need a complex viewed array, but for now we simply delete specific ones.
+        // Soft-delete: We update the user document with the current timestamp
+        // so that global & personal messages created earlier are filtered out visually.
+        // We also prune direct notifications to save space.
+        const user = await User.findById(userId);
+        if (user) {
+            user.notificationsClearedAt = new Date();
+            await user.save();
+        }
+
         await Notification.deleteMany({ user: userId });
 
         res.status(200).json({
             success: true,
-            message: 'Personal notifications cleared'
+            message: 'Inbox successfully cleared'
         });
 
     } catch (error) {

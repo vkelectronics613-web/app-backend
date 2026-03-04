@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
+const GlobalConfig = require('../models/GlobalConfig');
 const crypto = require('crypto');
 
 // Generate 6 character referral code
@@ -54,17 +55,10 @@ const loginUser = async (req, res) => {
 
             await user.save();
         } else {
-            // Update deviceId if it changed (and depending on strictness, we might block this)
+            // Update deviceId if it changed (users logging in on a new phone, or upgrading the ID system)
             if (deviceId && user.deviceId !== deviceId) {
-                // Anti-Fraud Device Lock: Permanently link deviceId to UID
-                if (user.deviceId) {
-                    // If a device ID already exists and it's different, it could be a warning
-                    // based on rules "One deviceId permanently linked to one UID".
-                    return res.status(403).json({ message: 'Device mismatch. Account is locked to a different device.' });
-                } else {
-                    user.deviceId = deviceId;
-                    await user.save();
-                }
+                user.deviceId = deviceId;
+                await user.save();
             }
         }
 
@@ -150,8 +144,18 @@ const enterReferralCode = async (req, res) => {
     }
 };
 
+const getGlobalAppConfig = async (req, res) => {
+    try {
+        const config = await GlobalConfig.findOne() || { jackpotProbability: 10, dailyAdLimitUser: 20, coinsPerRupee: 80 };
+        res.status(200).json({ success: true, data: config });
+    } catch (error) {
+        res.status(500).json({ success: false, message: 'Failed to load app config' });
+    }
+};
+
 module.exports = {
     loginUser,
     getUserProfile,
     enterReferralCode,
+    getGlobalAppConfig
 };
