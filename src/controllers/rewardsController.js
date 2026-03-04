@@ -186,3 +186,39 @@ exports.submitTurboRacerResult = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
+// 6. Minesweeper Result
+exports.submitMinesweeperResult = async (req, res) => {
+    try {
+        const { action, amount } = req.body;
+        const userId = req.user.userId;
+
+        if (!action || amount === undefined || amount < 0) {
+            return res.status(400).json({ success: false, message: 'Invalid payload' });
+        }
+
+        const user = await User.findById(userId);
+
+        if (action === 'BET') {
+            if (amount > 80) return res.status(400).json({ success: false, message: 'Maximum bet is 80 coins.' });
+            if (user.coinBalance < amount) return res.status(400).json({ success: false, message: 'Insufficient balance.' });
+
+            user.coinBalance -= amount;
+            await user.save();
+            await createTx(userId, 'SPEND', amount, 'MINESWEEPER', `Minesweeper Bet (-${amount} coins)`);
+
+            return res.json({ success: true, newBalance: user.coinBalance, message: 'Bet placed successfully.' });
+        } else if (action === 'WIN') {
+            user.coinBalance += amount;
+            await user.save();
+            await createTx(userId, 'EARN', amount, 'MINESWEEPER', `Minesweeper Win (+${amount} coins)`);
+
+            return res.json({ success: true, newBalance: user.coinBalance, message: `Secured ${amount} coins!` });
+        } else {
+            return res.status(400).json({ success: false, message: 'Invalid action type' });
+        }
+    } catch (error) {
+        console.error("Minesweeper Error:", error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
