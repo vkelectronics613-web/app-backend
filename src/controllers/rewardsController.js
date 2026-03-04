@@ -91,10 +91,9 @@ exports.executeLuckySpin = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Daily limit of 10 spins reached.' });
         }
 
-        // User request: 777 = 1 Coin, assuming the standard game randomly gives chunks of ~777-1500 points
-        const rawPoints = Math.floor(Math.random() * 1500) + 500;
-        const prize = Math.floor(rawPoints / 777);
-        const finalPrize = prize > 0 ? prize : 1; // Minimum 1 coin win
+        // Spin Wheel Prize Pool (Up to 50 Coins)
+        const prizePool = [1, 2, 3, 5, 10, 15, 20, 50];
+        const finalPrize = prizePool[Math.floor(Math.random() * prizePool.length)];
 
         user.coinBalance += finalPrize;
         user.spin.count += 1;
