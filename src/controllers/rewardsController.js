@@ -221,3 +221,35 @@ exports.submitMinesweeperResult = async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
+
+// 7. Scratch & Earn
+exports.executeScratchEarn = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const user = await User.findById(userId);
+
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Prize Pool: ~85% chance for 4-10 coins, ~15% chance for 15-25 coins
+        const isLucky = Math.random() < 0.15;
+        let prize = 0;
+        if (isLucky) {
+            prize = Math.floor(Math.random() * (25 - 15 + 1)) + 15; // 15 to 25
+        } else {
+            prize = Math.floor(Math.random() * (10 - 4 + 1)) + 4; // 4 to 10
+        }
+
+        user.coinBalance += prize;
+        await user.save();
+
+        await createTx(userId, 'EARN', prize, 'SCRATCH', 'Scratch & Earn');
+
+        res.json({ success: true, prize, message: `You scratched and won ${prize} coins!` });
+
+    } catch (error) {
+        console.error("Scratch Error:", error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
