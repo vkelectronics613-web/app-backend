@@ -151,6 +151,7 @@ const enterReferralCode = async (req, res) => {
 };
 
 module.exports = {
+    loginUser,
     getUserProfile,
     enterReferralCode,
 };
