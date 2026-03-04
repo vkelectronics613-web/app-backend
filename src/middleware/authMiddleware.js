@@ -24,19 +24,21 @@ const verifyFirebaseToken = async (req, res, next) => {
         if (existingUser) {
             if (existingUser.isBanned) {
                 return res.status(403).json({ message: 'Forbidden: Account is banned' });
-                req.user._id = existingUser._id; // Legacy mongo ID access
-                req.user.userId = existingUser._id; // Standardized controller access
-                req.user.notificationsClearedAt = existingUser.notificationsClearedAt;
             }
 
-            next();
-        } catch (error) {
-            console.error('Firebase Auth Error:', error.message);
-            if (error.code === 'auth/id-token-expired') {
-                return res.status(401).json({ message: 'Unauthorized: Token expired' });
-            }
-            return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+            req.user._id = existingUser._id; // Legacy mongo ID access
+            req.user.userId = existingUser._id; // Standardized controller access
+            req.user.notificationsClearedAt = existingUser.notificationsClearedAt;
         }
-    };
 
-    module.exports = { verifyFirebaseToken };
+        next();
+    } catch (error) {
+        console.error('Firebase Auth Error:', error.message);
+        if (error.code === 'auth/id-token-expired') {
+            return res.status(401).json({ message: 'Unauthorized: Token expired' });
+        }
+        return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+    }
+};
+
+module.exports = { verifyFirebaseToken };
