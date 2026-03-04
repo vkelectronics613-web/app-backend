@@ -1,5 +1,5 @@
 const express = require('express');
-const { loginUser, getUserProfile, enterReferralCode } = require('../controllers/authController');
+const { loginUser, getUserProfile, enterReferralCode, getGlobalAppConfig } = require('../controllers/authController');
 const { getMyNotifications, clearMyNotifications } = require('../controllers/notificationController');
 const { verifyFirebaseToken } = require('../middleware/authMiddleware');
 const { detectFraud } = require('../middleware/fraudMiddleware');
@@ -21,5 +21,8 @@ router.delete('/notifications', verifyFirebaseToken, clearMyNotifications);
 
 // Enter Referral Code Post-Signup
 router.post('/enter-referral-code', verifyFirebaseToken, enterReferralCode);
+
+// Public Config Fetch
+router.get('/config', getGlobalAppConfig);
 
 module.exports = router;

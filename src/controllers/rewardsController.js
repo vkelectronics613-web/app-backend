@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const Transaction = require('../models/Transaction');
+const GlobalConfig = require('../models/GlobalConfig');
 
 // Utility to create transaction
 const createTx = async (userId, type, amount, source, description) => {
@@ -90,13 +91,22 @@ exports.executeLuckySpin = async (req, res) => {
             }
         }
 
+        const globalConfig = await GlobalConfig.findOne() || { jackpotProbability: 10 };
+
         if (user.spin.count >= 10) {
             return res.status(400).json({ success: false, message: 'Daily limit of 10 spins reached.' });
         }
 
-        // Spin Wheel Prize Pool (Up to 50 Coins)
-        const prizePool = [1, 2, 3, 5, 10, 15, 20, 50];
-        const finalPrize = prizePool[Math.floor(Math.random() * prizePool.length)];
+        // Spin Wheel Prize Pool logic based on Global Jackpot Probability
+        const isJackpot = Math.random() < (globalConfig.jackpotProbability / 100);
+
+        let finalPrize = 0;
+        if (isJackpot) {
+            finalPrize = 50; // Max prize
+        } else {
+            const normalPrizes = [1, 2, 3, 5, 10, 15, 20];
+            finalPrize = normalPrizes[Math.floor(Math.random() * normalPrizes.length)];
+        }
 
         user.coinBalance += finalPrize;
         user.spin.count += 1;
@@ -123,8 +133,30 @@ exports.executeWatchAd = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
+        const globalConfig = await GlobalConfig.findOne() || { dailyAdLimitUser: 20 };
+
+        const now = new Date();
+        const lastReset = user.lastAdReset;
+
+        // Reset daily ad views if it's a new day
+        if (lastReset) {
+            const lastResetDay = new Date(lastReset).setHours(0, 0, 0, 0);
+            const today = new Date().setHours(0, 0, 0, 0);
+
+            if (today > lastResetDay) {
+                user.adViewsToday = 0;
+            }
+        }
+
+        // Enforce Ad Limit cap
+        if (user.adViewsToday >= globalConfig.dailyAdLimitUser) {
+            return res.status(403).json({ success: false, message: `Daily Ad Limit of ${globalConfig.dailyAdLimitUser} reached. Come back tomorrow!` });
+        }
+
         const reward = 10; // 10 coins per ad
         user.coinBalance += reward;
+        user.adViewsToday += 1;
+        user.lastAdReset = now;
         await user.save();
 
         await createTx(userId, 'EARN', reward, 'WATCH_AD', 'Watch Ad Video');
@@ -243,8 +275,10 @@ exports.executeScratchEarn = async (req, res) => {
             return res.status(404).json({ success: false, message: 'User not found' });
         }
 
-        // Prize Pool: ~85% chance for 4-10 coins, ~15% chance for 15-25 coins
-        const isLucky = Math.random() < 0.15;
+        const globalConfig = await GlobalConfig.findOne() || { jackpotProbability: 10 };
+
+        // Prize Pool: controlled dynamically by admin's jackpot variable
+        const isLucky = Math.random() < (globalConfig.jackpotProbability / 100);
         let prize = 0;
         if (isLucky) {
             prize = Math.floor(Math.random() * (25 - 15 + 1)) + 15; // 15 to 25
