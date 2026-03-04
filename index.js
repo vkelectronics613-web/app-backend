@@ -35,12 +35,14 @@ const authRoutes = require('./src/routes/authRoutes');
 const rewardsRoutes = require('./src/routes/rewardsRoutes');
 const walletRoutes = require('./src/routes/walletRoutes');
 const admobRoutes = require('./src/routes/admobRoutes');
+const adminRoutes = require('./src/routes/adminRoutes');
 
 // Mount Routes
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/rewards', rewardsRoutes);
 app.use('/api/v1/wallet', walletRoutes);
 app.use('/api/v1/admob', admobRoutes);
+app.use('/api/v1/admin', adminRoutes);
 
 // Basic Route for testing
 app.get('/', (req, res) => {
