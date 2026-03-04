@@ -8,6 +8,10 @@ const userSchema = new mongoose.Schema(
             unique: true,
             index: true,
         },
+        isAdmin: {
+            type: Boolean,
+            default: false
+        },
         coinBalance: {
             type: Number,
             default: 0,
