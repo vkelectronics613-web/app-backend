@@ -2,12 +2,13 @@ const User = require('../models/User');
 const Transaction = require('../models/Transaction');
 
 // Utility to create transaction
-const createTx = async (userId, type, amount, source) => {
+const createTx = async (userId, type, amount, source, description) => {
     await Transaction.create({
         user: userId,
         type,
         amount,
-        source
+        source,
+        description
     });
 };
 
@@ -53,7 +54,7 @@ exports.claimDailyStreak = async (req, res) => {
         user.streak.lastClaimDate = now;
         await user.save();
 
-        await createTx(userId, 'EARN', rewardCoins, `Daily Streak Day ${currentDay}`);
+        await createTx(userId, 'EARN', rewardCoins, 'STREAK', `Daily Streak Day ${currentDay}`);
 
         res.json({ success: true, rewardCoins, currentDay, message: `You earned ${rewardCoins} coins!` });
 
@@ -100,7 +101,7 @@ exports.executeLuckySpin = async (req, res) => {
         user.spin.lastSpinDate = now;
         await user.save();
 
-        await createTx(userId, 'EARN', finalPrize, 'Lucky Spin');
+        await createTx(userId, 'EARN', finalPrize, 'SPIN', 'Lucky Spin');
 
         res.json({ success: true, prize: finalPrize, count: user.spin.count, message: `You won ${finalPrize} coins!` });
 
@@ -124,7 +125,7 @@ exports.executeWatchAd = async (req, res) => {
         user.coinBalance += reward;
         await user.save();
 
-        await createTx(userId, 'EARN', reward, 'Watch Ad Video');
+        await createTx(userId, 'EARN', reward, 'WATCH_AD', 'Watch Ad Video');
 
         res.json({ success: true, reward, message: `You earned ${reward} coins from Ad!` });
 
@@ -150,7 +151,7 @@ exports.submitLudoResult = async (req, res) => {
         user.coinBalance += reward;
         await user.save();
 
-        await createTx(userId, 'EARN', reward, 'Ludo Victory');
+        await createTx(userId, 'EARN', reward, 'LUDO_WIN', 'Ludo Victory');
 
         res.json({ success: true, reward, message: `Winner! You earned ${reward} coins.` });
     } catch (error) {
@@ -177,7 +178,7 @@ exports.submitTurboRacerResult = async (req, res) => {
         user.coinBalance += reward;
         await user.save();
 
-        await createTx(userId, 'EARN', reward, `Turbo Racer Run (${Math.floor(distance)}m)`);
+        await createTx(userId, 'EARN', reward, 'TURBO_RACER', `Turbo Racer Run (${Math.floor(distance)}m)`);
 
         res.json({ success: true, reward, message: `Race Over! You earned ${reward} coins.` });
     } catch (error) {
