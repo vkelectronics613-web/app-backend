@@ -14,7 +14,7 @@ const transactionSchema = new mongoose.Schema(
         },
         source: {
             type: String,
-            enum: ['REFERRAL', 'STREAK', 'SPIN', 'LUDO_WIN', 'PAYOUT_REQUEST', 'ADMIN'],
+            enum: ['REFERRAL', 'STREAK', 'SPIN', 'LUDO_WIN', 'WATCH_AD', 'TURBO_RACER', 'PAYOUT_REQUEST', 'ADMIN'],
             required: true,
         },
         amount: {
