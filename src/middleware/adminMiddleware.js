@@ -1,17 +1,14 @@
-const User = require('../models/User');
-
-const isAdminUser = async (req, res, next) => {
+const isAdminUser = (req, res, next) => {
     try {
-        if (!req.user || !req.user._id) {
-            return res.status(401).json({ success: false, message: 'Not authorized, token failed' });
+        const secret = req.headers['x-admin-secret'];
+        if (!process.env.ADMIN_SECRET) {
+            console.warn("ADMIN_SECRET not set in backend .env!");
         }
 
-        const user = await User.findById(req.user._id);
-
-        if (user && user.isAdmin) {
+        if (secret && secret === (process.env.ADMIN_SECRET || 'RupeeMaster2026')) {
             next();
         } else {
-            res.status(403).json({ success: false, message: 'Not authorized as an admin' });
+            res.status(403).json({ success: false, message: 'Invalid Admin Secret' });
         }
     } catch (error) {
         console.error('Admin Middleware Error:', error);
