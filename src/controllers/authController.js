@@ -92,7 +92,65 @@ const getUserProfile = async (req, res) => {
     }
 };
 
+const enterReferralCode = async (req, res) => {
+    try {
+        const { referralCode } = req.body;
+        if (!referralCode) {
+            return res.status(400).json({ success: false, message: 'Please provide a referral code.' });
+        }
+
+        const user = await User.findById(req.user._id);
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        if (user.referredBy) {
+            return res.status(400).json({ success: false, message: 'You have already used a referral code.' });
+        }
+
+        if (user.referralCode === referralCode) {
+            return res.status(400).json({ success: false, message: 'You cannot use your own referral code.' });
+        }
+
+        const referringUser = await User.findOne({ referralCode });
+        if (!referringUser) {
+            return res.status(400).json({ success: false, message: 'Invalid referral code.' });
+        }
+
+        // Give Inviter Bonus
+        referringUser.coinBalance += 20;
+        await referringUser.save();
+        await Transaction.create({
+            user: referringUser._id,
+            type: 'EARN',
+            source: 'REFERRAL',
+            amount: 20,
+            description: `Bonus from user \${user.displayName || 'new friend'} entering your code!`,
+        });
+
+        // Give Current User Bonus
+        user.coinBalance += 20;
+        user.referredBy = referringUser._id;
+        await user.save();
+        await Transaction.create({
+            user: user._id,
+            type: 'EARN',
+            source: 'REFERRAL',
+            amount: 20,
+            description: `Bonus for entering invite code: \${referralCode}`,
+        });
+
+        res.status(200).json({
+            success: true,
+            message: 'Referral code accepted! You earned 20 Coins.',
+            data: user
+        });
+
+    } catch (error) {
+        console.error('Enter Referral Error:', error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
 module.exports = {
-    loginUser,
     getUserProfile,
+    enterReferralCode,
 };
