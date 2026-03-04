@@ -1,5 +1,5 @@
 const express = require('express');
-const { claimDailyStreak, executeLuckySpin, submitLudoResult, executeWatchAd } = require('../controllers/rewardsController');
+const { claimDailyStreak, executeLuckySpin, submitLudoResult, executeWatchAd, submitTurboRacerResult } = require('../controllers/rewardsController');
 const { verifyFirebaseToken } = require('../middleware/authMiddleware');
 const { detectFraud } = require('../middleware/fraudMiddleware');
 
@@ -19,5 +19,8 @@ router.post('/ludo-result', submitLudoResult);
 
 // Watch Ad to earn coins
 router.post('/watch-ad', executeWatchAd);
+
+// Submit Turbo Racer Result
+router.post('/turbo-racer', submitTurboRacerResult);
 
 module.exports = router;

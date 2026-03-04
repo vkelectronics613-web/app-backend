@@ -25,7 +25,8 @@ const verifyFirebaseToken = async (req, res, next) => {
             if (existingUser.isBanned) {
                 return res.status(403).json({ message: 'Forbidden: Account is banned' });
             }
-            req.user._id = existingUser._id; // Add mongo ID for easy access later
+            req.user._id = existingUser._id; // Legacy mongo ID access
+            req.user.userId = existingUser._id; // Standardized controller access
         }
 
         next();

@@ -90,16 +90,19 @@ exports.executeLuckySpin = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Daily limit of 10 spins reached.' });
         }
 
-        const prize = Math.floor(Math.random() * 15) + 5; // Yield 5-20 coins randomly
+        // User request: 777 = 1 Coin, assuming the standard game randomly gives chunks of ~777-1500 points
+        const rawPoints = Math.floor(Math.random() * 1500) + 500;
+        const prize = Math.floor(rawPoints / 777);
+        const finalPrize = prize > 0 ? prize : 1; // Minimum 1 coin win
 
-        user.coinBalance += prize;
+        user.coinBalance += finalPrize;
         user.spin.count += 1;
         user.spin.lastSpinDate = now;
         await user.save();
 
-        await createTx(userId, 'EARN', prize, 'Lucky Spin');
+        await createTx(userId, 'EARN', finalPrize, 'Lucky Spin');
 
-        res.json({ success: true, prize, count: user.spin.count, message: `You won ${prize} coins!` });
+        res.json({ success: true, prize: finalPrize, count: user.spin.count, message: `You won ${finalPrize} coins!` });
 
     } catch (error) {
         console.error("Spin Error:", error);
@@ -152,6 +155,33 @@ exports.submitLudoResult = async (req, res) => {
         res.json({ success: true, reward, message: `Winner! You earned ${reward} coins.` });
     } catch (error) {
         console.error("Ludo Result Error:", error);
+        res.status(500).json({ success: false, message: 'Internal Server Error' });
+    }
+};
+
+// 5. Turbo Racer Result
+exports.submitTurboRacerResult = async (req, res) => {
+    try {
+        const { distance } = req.body;
+        const userId = req.user.userId;
+
+        if (!distance || distance < 500) {
+            return res.json({ success: true, reward: 0, message: 'Keep driving! Earn coins starting at 500m.' });
+        }
+
+        const user = await User.findById(userId);
+
+        // Anti-Cheat: Backend recalculates coins based strictly on raw distance
+        const reward = Math.floor(distance / 500);
+
+        user.coinBalance += reward;
+        await user.save();
+
+        await createTx(userId, 'EARN', reward, `Turbo Racer Run (${Math.floor(distance)}m)`);
+
+        res.json({ success: true, reward, message: `Race Over! You earned ${reward} coins.` });
+    } catch (error) {
+        console.error("Turbo Racer Error:", error);
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 };
